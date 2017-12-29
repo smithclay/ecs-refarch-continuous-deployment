@@ -44,11 +44,7 @@ Resources:
       Family: !Sub ${AWS::StackName}-simple-app
       ContainerDefinitions:
         - Name: simple-app
-          Image: amazon/amazon-ecs-sample
-          EntryPoint:
-            - /usr/sbin/apache2
-            - -D
-            - FOREGROUND
+          Image: smithclay/ecs-demo-newrelic-nodejs-simple-app
           Essential: true
           Memory: 128
           MountPoints:
