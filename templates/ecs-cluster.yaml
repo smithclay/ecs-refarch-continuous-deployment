@@ -20,15 +20,15 @@ Parameters:
 Mappings:
   AWSRegionToAMI:
     us-east-2:
-      AMI: ami-1c002379
+      AMI: ami-58f5db3d
     us-east-1:
-      AMI: ami-9eb4b1e5
+      AMI: ami-fad25980
     us-west-2:
-      AMI: ami-1d668865
+      AMI: ami-7114c909
     us-west-1:
-      AMI: ami-4a2c192a
+      AMI: ami-62e0d802
     eu-west-2:
-      AMI: ami-cb1101af
+      AMI: ami-7114c909
     eu-west-1:
       AMI: ami-8fcc32f6
     eu-central-1:
@@ -142,6 +142,7 @@ Resources:
         "Fn::Base64": !Sub |
           #!/bin/bash
           yum install -y aws-cfn-bootstrap
+          echo ECS_ENABLE_CONTAINER_METADATA=true >> /etc/ecs/ecs.config
           /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource LaunchConfiguration
           /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup
 
