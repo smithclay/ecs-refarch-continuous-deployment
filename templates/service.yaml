@@ -50,7 +50,8 @@ Resources:
           Essential: true
           Memory: 128
           Environment:
-            NEW_RELIC_LICENSE_KEY: !Ref NewRelicLicenseKey
+            - Name: NEW_RELIC_LICENSE_KEY
+              Value: !Ref NewRelicLicenseKey
           MountPoints:
             - SourceVolume: my-vol
               ContainerPath: /var/www/my-vol
