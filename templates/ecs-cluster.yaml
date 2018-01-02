@@ -109,6 +109,8 @@ Resources:
           commands:
             01_add_instance_to_cluster:
                 command: !Sub echo ECS_CLUSTER=${Cluster} > /etc/ecs/ecs.config
+            02_enable_ecs_metadata:
+                command: echo ECS_ENABLE_CONTAINER_METADATA=true >> /etc/ecs/ecs.config
           files:
             "/etc/cfn/cfn-hup.conf":
               mode: 000400
@@ -142,7 +144,6 @@ Resources:
         "Fn::Base64": !Sub |
           #!/bin/bash
           yum install -y aws-cfn-bootstrap
-          echo ECS_ENABLE_CONTAINER_METADATA=true >> /etc/ecs/ecs.config
           /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource LaunchConfiguration
           /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup
 
