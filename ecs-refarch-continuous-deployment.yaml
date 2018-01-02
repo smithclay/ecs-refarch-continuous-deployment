@@ -24,6 +24,9 @@ Parameters:
     Description: >
       Token for the user specified above. (https://github.com/settings/tokens)
 
+  NewRelicLicenseKey:
+    Type: String
+    Description: License key for the New Relic application.
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -67,6 +70,7 @@ Resources:
         GitHubToken: !Ref GitHubToken
         GitHubRepo: !Ref GitHubRepo
         GitHubBranch: !Ref GitHubBranch
+        NewRelicLicenseKey: !Ref NewRelicLicenseKey
 
   LoadBalancer:
     Type: AWS::CloudFormation::Stack
@@ -93,7 +97,7 @@ Resources:
       Parameters:
         Cluster: !GetAtt Cluster.Outputs.ClusterName
         TargetGroup: !GetAtt LoadBalancer.Outputs.TargetGroup
-
+        NewRelicLicenseKey: !Ref NewRelicLicenseKey
 
 Outputs:
   ServiceUrl:

@@ -9,6 +9,8 @@ Parameters:
   Cluster:
     Type: String
 
+  NewRelicLicenseKey:
+    Type: String
 
 Resources:
   ECSServiceRole:
@@ -47,6 +49,8 @@ Resources:
           Image: smithclay/ecs-demo-newrelic-nodejs-simple-app
           Essential: true
           Memory: 128
+          Environment:
+            NEW_RELIC_LICENSE_KEY: !Ref NewRelicLicenseKey
           MountPoints:
             - SourceVolume: my-vol
               ContainerPath: /var/www/my-vol
