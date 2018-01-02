@@ -127,30 +127,34 @@ Resources:
                 - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
                 - IMAGE_URI="${REPOSITORY_URI}:${TAG}"
                 - TRACE_FILE=$(mktemp)
+                - TRANSACTION_NAME=CodebuildPipeline
                 # Traceformer setup
                 - wget -O traceformer https://s3-us-west-2.amazonaws.com/traceformer/2f4826c8-d4e6-4468-8158-c58d377ec882/traceformer/build/traceformer
                 - chmod +x ./traceformer
                 - nohup tail -f $TRACE_FILE | ./traceformer -app-name DevOpsTestCodeBuild >output.log 2>&1 &
                 - echo TRANSACTION_START CodebuildPipeline >> $TRACE_FILE
-                - echo echo ATTRIBUTE_ADD CodebuildPipeline IMAGE_URI $IMAGE_URI >> $TRACE_FILE
+                - echo ATTRIBUTE_ADD $TRANSACTION_NAME IMAGE_URI $IMAGE_URI >> $TRACE_FILE
+                - echo ATTRIBUTE_ADD $TRANSACTION_NAME VERSION $CODEBUILD_SOURCE_VERSION >> $TRACE_FILE
             build:
               commands:
-                - echo SEGMENT_START CodebuildPipeline CodebuildStep_Build >> $TRACE_FILE
+                - echo SEGMENT_START $TRANSACTION_NAME CodebuildStep_Build >> $TRACE_FILE
                 - docker build --tag "$IMAGE_URI" .
-                - echo SEGMENT_END CodebuildPipeline CodebuildStep_Build >> $TRACE_FILE
+                - echo SEGMENT_END $TRANSACTION_NAME CodebuildStep_Build >> $TRACE_FILE
             post_build:
               commands:
-                - echo SEGMENT_START CodebuildPipeline CodebuildStep_PostBuild >> $TRACE_FILE
+                - echo SEGMENT_START $TRANSACTION_NAME CodebuildStep_PostBuild >> $TRACE_FILE
                 - docker push "$IMAGE_URI"
                 - printf '[{"name":"simple-app","imageUri":"%s"}]' "$IMAGE_URI" > images.json
-                - echo SEGMENT_END CodebuildPipeline CodebuildStep_PostBuild >> $TRACE_FILE
+                - echo SEGMENT_END $TRANSACTION_NAME CodebuildStep_PostBuild >> $TRACE_FILE
+                # Capture errors
+                - if [[ $CODEBUILD_BUILD_SUCCEEDING == 0 ]]; then echo NOTICE_ERROR $TRANSACTION_NAME buildfail >> $TRACE_FILE; fi
                 # Traceformer: end and flush
-                - echo TRANSACTION_END CodebuildPipeline >> $TRACE_FILE
+                - echo TRANSACTION_END $TRANSACTION_NAME >> $TRACE_FILE
                 - echo SHUTDOWN >> $TRACE_FILE
                 # Traceformer: debug outputs and wait to end
+                - sleep 5
                 - cat $TRACE_FILE
                 - cat output.log
-                - sleep 5
           artifacts:
             files: images.json
       Environment:
