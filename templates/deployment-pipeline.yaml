@@ -129,13 +129,29 @@ Resources:
                 - $(aws ecr get-login)
                 - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
                 - IMAGE_URI="${REPOSITORY_URI}:${TAG}"
+                - TRACE_FILE=$(mktemp)
+                # Traceformer setup
+                - wget -O /tmp/traceformer https://s3-us-west-2.amazonaws.com/traceformer/2f4826c8-d4e6-4468-8158-c58d377ec882/traceformer/build/traceformer
+                - tail -f $TRACE_FILE | /tmp/traceformer -app-name DevOpsTestCodeBuild &> output.log &
+                - echo TRANSACTION_START CodebuildPipeline >> $TRACE_FILE
+                - echo echo ATTRIBUTE_ADD CodebuildPipeline IMAGE_URI $IMAGE_URI >> $TRACE_FILE
             build:
               commands:
+                - echo SEGMENT_START CodebuildPipeline CodebuildStep_Build >> $TRACE_FILE
                 - docker build --tag "$IMAGE_URI" .
+                - echo SEGMENT_END CodebuildPipeline CodebuildStep_Build >> $TRACE_FILE
             post_build:
               commands:
+                - echo SEGMENT_START CodebuildPipeline CodebuildStep_PostBuild >> $TRACE_FILE
                 - docker push "$IMAGE_URI"
                 - printf '[{"name":"simple-app","imageUri":"%s"}]' "$IMAGE_URI" > images.json
+                - echo SEGMENT_END CodebuildPipeline CodebuildStep_PostBuild >> $TRACE_FILE
+                # Traceformer: end
+                - echo TRANSACTION_END CodebuildPipeline >> $TRACE_FILE
+                # Traceformer: debug and wait to end
+                - cat $TRACE_FILE
+                - cat output.log
+                - sleep 5
           artifacts:
             files: images.json
       Environment:
